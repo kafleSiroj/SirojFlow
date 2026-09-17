@@ -1,6 +1,6 @@
 import numpy as np
 
-class NeuroSketch:
+class SirojFlow:
     """
     Base Class for the framework
     """

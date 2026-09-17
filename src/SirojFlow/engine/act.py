@@ -1,7 +1,7 @@
 import numpy as np
-from ._neurosketch import NeuroSketch
+from ._sirojflow import SirojFlow
 
-class Activation(NeuroSketch):
+class Activation(SirojFlow):
     def forward(self, x):
         raise NotImplementedError
     

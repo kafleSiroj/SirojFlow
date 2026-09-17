@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "NeuroSketch"
-version = "0.1.5"
-description = "A mini supervised learning framework"
+name = "SirojFlow"
+version = "0.1.6"
+description = "A lightweight deep learning framework"
 readme = "README.md"
 requires-python = ">=3.7"
 authors = [
@@ -17,5 +17,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+dependencies = [
+    "numpy>=1.22.0"
+]
+
 [project.urls]
-Homepage = "https://github.com/kafleSiroj/NeuroSketch.git"
+Homepage = "https://github.com/kafleSiroj/SirojFlow.git"

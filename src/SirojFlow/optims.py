@@ -10,11 +10,10 @@ class Optim:
 
         ### Usage:
         ```
-        optim1 = SGD(model, lr=0.01) #batches created while loading data, works as both full batch and mini batch gradient descent
 
-        optim2 = MOMENTUM(model, beta=0.9) #beta=0.9: Momentum parameter
+        optim2 = SGD(model, lr=0.001, moment=0.9, weight_decay=1e-4) #moment=0.9: Momentum parameter; weight_decay: L2 penalty
 
-        optim3 = ADAM(model, lr=0.001, beta=0.9, gamma=0.999)  #beta: first momentum; gamma: second momentum
+        optim3 = Adam(model, lr=0.001, beta=0.9, gamma=0.999, weight_decay=1e-4)  #beta: first momentum; gamma: second momentum; weight_decay: L2 penalty
         ```
     """
     def __init__(self, model: Sequential, lr: float):
@@ -54,49 +53,18 @@ class Optim:
             return param*curr_mov + (1-param)*(grad**2)
 
 
+
+
 class SGD(Optim):
     """
         ```
         model: pass the entire model
         lr=1e-3: learning rate
         ```
-        *works as both batch and mini-batch*
-
-        
-        ### Usage:
-        ```
-            optim = SGD(model, lr=0.01) 
-
-            for x_batch, y_batch in data_loader:
-                ...
-                optim.step()
-                ...
-        ``` 
-    """
-
-    def __init__(self, model, lr=1e-3):
-        super().__init__(model, lr)
-
-    def step(self):
-        self.lin_lays = self._call_back()
-        for linear in self.lin_lays:
-            dW, dB = linear.dW, linear.dB
-
-            linear.params["weights"][0] -= self.lr*dW
-            linear.params["biases"][0] -= self.lr*dB
-        
-
-
-class MOMENTUM(Optim):
-    """
-        ```
-        model: pass the entire model
-        lr=1e-3: learning rate
-        ```
 
         ### Usage:
         ```
-            optim = MOMENTUM(model, lr=1e-3, beta=0.9) #beta=0.9: Momentum parameter
+            optim = SGD(model: Sequential, lr=1e-3, moment: float, weight_decay: float) #moment: Momentum parameter; weight_decay: L2 Penalty
 
             for x_batch, y_batch in data_loader:
                 ...
@@ -104,28 +72,38 @@ class MOMENTUM(Optim):
                 ...
         ```
     """
-    def __init__(self, model, lr=1e-3, beta=0.9):
+    def __init__(self, model, lr=1e-3, moment=0.0, weight_decay=0.0):
         super().__init__(model, lr)
-        self.beta = beta
+        self.weight_decay = weight_decay
+        self.moment = moment
         self.m = None
 
     def step(self):
         self.lin_lays = self._call_back()
-        if self.m is None:
-            self.m = {"weights":[np.zeros_like(lin.params["weights"][0]) for lin in self.lin_lays], 
-                    "biases":[np.zeros_like(lin.params["biases"][0]) for lin in self.lin_lays]}
-            
-        for l in range(len(self.lin_lays)):
-            #for weights
-            self.m["weights"][l] = self._up_mov(self.m["weights"][l], self.lin_lays[l].dW, self.beta, "m")
-            self.lin_lays[l].params["weights"][0] -= self.lr*self.m["weights"][l]
+        
+        if self.moment > 0:
+            if self.m is None:
+                self.m = {"weights":[np.zeros_like(lin.params["weights"][0]) for lin in self.lin_lays], 
+                        "biases":[np.zeros_like(lin.params["biases"][0]) for lin in self.lin_lays]}
 
-            #for biases
-            self.m["biases"][l] = self._up_mov(self.m["biases"][l], self.lin_lays[l].dB, self.beta, "m")
-            self.lin_lays[l].params["biases"][0] -= self.lr*self.m["biases"][l]
+            for l in range(len(self.lin_lays)):
+                #for weights
+                self.m["weights"][l] = self._up_mov(self.m["weights"][l], self.lin_lays[l].dW + self.weight_decay*self.lin_lays[l].params["weights"][0], self.moment, "m")
+                self.lin_lays[l].params["weights"][0] -= self.lr*self.m["weights"][l]
+
+                #for biases
+                self.m["biases"][l] = self._up_mov(self.m["biases"][l], self.lin_lays[l].dB, self.moment, "m")
+                self.lin_lays[l].params["biases"][0] -= self.lr*self.m["biases"][l]
+
+        else:
+            for linear in self.lin_lays:
+                dW, dB = linear.dW + self.weight_decay * linear.params["weights"][0], linear.dB
+
+                linear.params["weights"][0] -= self.lr*dW
+                linear.params["biases"][0] -= self.lr*dB
 
 
-class ADAM(Optim):
+class Adam(Optim):
     """
         ```
         model: pass the entire model
@@ -134,7 +112,7 @@ class ADAM(Optim):
 
         Usage:
         ```
-            optim = ADAM(model, lr=0.001, beta=0.9, gamma=0.999)  #beta=0.9: first momentum; gamma=0.999: second momentum
+            optim = Adam(model: Sequential, lr=1e-3, beta=0.9, gamma=0.999, weight_decay: float)  #beta=0.9: first momentum; gamma=0.999: second momentum; weight_decay: L2 Penalty
 
             for x_batch, y_batch in data_loader:
                 ...
@@ -142,10 +120,11 @@ class ADAM(Optim):
                 ...
         ```
     """
-    def __init__(self, model, lr=1e-3, beta=0.9, gamma=0.999):
+    def __init__(self, model, lr=1e-3, beta=0.9, gamma=0.999, weight_decay=0.0):
         super().__init__(model, lr)
         self.beta = beta
         self.gamma = gamma
+        self.weight_decay = weight_decay
         self.t = 0
         self.epsilon = 1e-8
         self.m = None
@@ -168,7 +147,7 @@ class ADAM(Optim):
             m_hat = self.m["weights"][l] / (1-self.beta**self.t)
             v_hat = self.v["weights"][l] / (1-self.gamma**self.t)
 
-            self.lin_lays[l].params["weights"][0] -= self.lr*(m_hat / (np.sqrt(v_hat) + self.epsilon))
+            self.lin_lays[l].params["weights"][0] -= self.lr*((m_hat / (np.sqrt(v_hat) + self.epsilon)) + self.weight_decay * self.lin_lays[l].params["weights"][0])
 
             #for biases            
             self.m["biases"][l] = self._up_mov(self.m["biases"][l], self.lin_lays[l].dB, self.beta, "m")
@@ -177,6 +156,3 @@ class ADAM(Optim):
             v_hat = self.v["biases"][l] / (1-self.gamma**self.t)
 
             self.lin_lays[l].params["biases"][0] -= self.lr*(m_hat / (np.sqrt(v_hat) + self.epsilon))
-            
-            
-    

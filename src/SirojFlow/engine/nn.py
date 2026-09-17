@@ -1,7 +1,7 @@
 import numpy as np
-from ._neurosketch import NeuroSketch
+from ._sirojflow import SirojFlow
 
-class Linear(NeuroSketch):
+class Linear(SirojFlow):
     def __init__(self, in_features, out_features, init_type=None):
         super().__init__()
         self.in_features = in_features
@@ -40,7 +40,7 @@ class Linear(NeuroSketch):
         return f"Linear(in={self.in_features}, out={self.out_features})"
 
 
-class Sequential(NeuroSketch):
+class Sequential(SirojFlow):
     def __init__(self, *layers):
         super().__init__()
         self.layers = list(layers)
