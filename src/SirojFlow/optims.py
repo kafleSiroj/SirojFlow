@@ -25,7 +25,7 @@ class Optim:
         Does backward pass to every layer of model from last layer, from what it caches the chained gradient upto previous layer as `grad_next` in the current layer by calling each layer's `.backward(next_grad)`
         <br>
         <br>
-        Then filters updatable layer `Linear` which has parameters `dW` and `dB`, fetches those and updates the parameters of all linear layers. This process is done my a static method `_call_back`
+        Then filters updatable layer `Linear` which has parameters `dW` and `dB`, fetches those and updates the parameters of all linear layers. This process is handled by a static method `_call_back`
 
         
         """

@@ -198,7 +198,7 @@ optimizer.step()
     ```
 2. Import the `Sequential` layer container from `sirojflow.engine.nn`
 3. Now, import the `Linear` layer object from `sirojflow.engine.nn` and essential activations from `sirojflow.engine.nn.act`
-4. You can define you model in two ways:
+4. You can define your model in two ways:
     ```python
     model = Sequential(
         <*layers>
@@ -213,7 +213,7 @@ optimizer.step()
     ...
     ...
     ```
-    Note: The `Linear` layer requires you to enter two parameter `in_features` and `out_features` because shape of linear layer is *(in_features x out_features)*. You can even specify weight initialization for each linear layer. Shape of weight: *(out_features x in_feature)*.
+    Note: The `Linear` layer requires two parameter `in_features` and `out_features` because shape of linear layer is *(in_features x out_features)*. You can even specify weight initialization for each linear layer. Shape of weight: *(out_features x in_feature)*.
 
 5. Now, import required loss from `sirojflow.losses` and required optimizer from `sirojflow.optims`. 
 6. To setup optimizer, you should pass entire model `model` into it, and you can put enter the learning rate `lr`:
